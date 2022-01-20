@@ -12,6 +12,9 @@ export class SignupDto {
   @IsNotEmpty()
   name: string
 
+  @MinLength(4, {
+    message: 'Invalid username length',
+  })
   @IsString()
   @IsNotEmpty()
   username: string
@@ -42,6 +45,9 @@ export class SignupDto {
 
 export class SigninDto {
   @IsString()
+  @MinLength(4, {
+    message: 'Invalid username length',
+  })
   @ValidateIf((cred) => !cred.email || cred.username)
   username?: string
 
@@ -89,4 +95,10 @@ export class VerifyOTPDto {
   })
   @IsNotEmpty()
   otp: string
+}
+
+export class RefreshTokenDto {
+  @IsString()
+  @IsNotEmpty()
+  refreshToken: string
 }

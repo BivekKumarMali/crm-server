@@ -4,11 +4,12 @@ import config from 'config'
 import HttpException from '../shared/http/httpException'
 import UserService from '../service/user.service'
 import { verifyJWTToken } from '../utils/jwt.util'
+import { Role } from '../constants/enums/user.enum'
 
 @injectable()
 export default class AuthMiddleware {
   constructor(private readonly userService: UserService) {
-      this.isAuthorized = this.isAuthorized.bind(this)
+    this.isAuthorized = this.isAuthorized.bind(this)
   }
 
   async isAuthorized(req: Request, res: Response, next: NextFunction) {
@@ -29,6 +30,33 @@ export default class AuthMiddleware {
 
       req.user = user
 
+      next()
+    } catch (err: any) {
+      if (
+        err.message === 'invalid token' ||
+        err.message === 'invalid signature'
+      ) {
+        return next(new HttpException('Invalid Token', 401, 'Unauthorized'))
+      }
+
+      if (err.name === 'TokenExpiredError') {
+        return next(
+          new HttpException('Access Token Expired', 401, 'Unauthorized')
+        )
+      }
+
+      next(err)
+    }
+  }
+
+  async isAdmin(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (
+        !req.user.roles.includes(Role.admin) ||
+        !req.user.roles.includes(Role.superAdmin)
+      ) {
+        throw new HttpException(null, 401, 'Unauthorized')
+      }
       next()
     } catch (err: any) {
       if (err.message === 'invalid token') {
