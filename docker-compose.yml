@@ -16,6 +16,9 @@ services:
   redis:
     container_name: redis-container
     image: redis:latest
+    command: --port 6380
+    ports:
+      - "6380:6380"
     volumes:
       - cache:/data
     restart: always
@@ -29,7 +32,7 @@ services:
       args:
         NODE_ENV: production
     ports:
-      - '4000:4000'
+      - '8080:4000'
     # volumes:
       # - ./:/app
       # - /app/node_modules
@@ -42,7 +45,8 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=password
       - DB_DATABASE=test
-      - REDIS_URL=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
     env_file:
       - ./.env
     command: yarn start:prod

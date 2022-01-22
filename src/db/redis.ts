@@ -14,7 +14,9 @@ export default class Redis {
   private async connect(): Promise<void> {
     try {
       this.client = createClient({
-        url: `redis://${config.get('REDIS_URL') as string}`,
+        url: `redis://${config.get('REDIS_HOST') as string}:${
+          config.get('REDIS_PORT') as number
+        }`,
       })
       this.client.on('connect', () =>
         this.logger.info('Redis Client Connected')
