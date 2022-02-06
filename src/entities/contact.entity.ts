@@ -2,14 +2,20 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Base } from './base.entity'
 import { Disposition } from '../constants/enums/disposition.enum'
 import { List } from './list.entity'
+import { IsNotEmpty, ValidateIf } from 'class-validator'
 
 @Entity('contact')
 export class Contact extends Base {
   @Column()
-  countryCode: string
+  primaryCountryCode: string
 
   @Column()
   primaryContactNumber: string
+
+  @Column({ nullable: true })
+  @IsNotEmpty()
+  @ValidateIf((obj) => obj.secondaryContactNumber)
+  secondaryCountryCode: string
 
   @Column({ nullable: true })
   secondaryContactNumber: string

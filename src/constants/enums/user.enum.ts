@@ -1,7 +1,7 @@
 export enum Status {
-  active = 1,
-  hold,
-  blocked,
+  active = 'active',
+  hold = 'hold',
+  blocked = 'blocked',
 }
 
 export enum Role {

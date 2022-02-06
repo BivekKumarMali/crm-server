@@ -13,6 +13,10 @@ import Database from './db/database'
 import ErrorMiddleware from './middleware/error.middleware'
 import Logger from './logger/logger'
 import AuthController from './controller/auth.controller'
+import TeamController from './controller/team.controller'
+import ListController from './controller/list.controller'
+import ContactController from './controller/contact.controller'
+import MemberController from './controller/member.controller'
 
 async function bootstrap(): Promise<void> {
   dotenv.config()
@@ -24,6 +28,10 @@ async function bootstrap(): Promise<void> {
   const logger = container.resolve(Logger)
   const errorMiddleware = container.resolve(ErrorMiddleware)
   const authController = container.resolve(AuthController)
+  const memberController = container.resolve(MemberController)
+  const teamController = container.resolve(TeamController)
+  const listController = container.resolve(ListController)
+  const contactController = container.resolve(ContactController)
 
   db.connect()
 
@@ -43,10 +51,15 @@ async function bootstrap(): Promise<void> {
   app.use(hpp({ whitelist: [] }))
   app.use(apiLimiter)
 
+  app.get('/api/v1/healthCheck', (req: Request, res: Response) =>
+    res.status(200).send({ status: 'active' })
+  )
   app.use('/api/v1/auth', authController.routes())
+  app.use('/api/v1/member', memberController.routes())
+  app.use('/api/v1/team', teamController.routes())
+  app.use('/api/v1/list', listController.routes())
+  app.use('/api/v1/contact', contactController.routes())
 
-  app.get('/api/v1/healthCheck', (req: Request, res:Response) => res.status(200).send({ status: 'active' }))
-  
   app.use([errorMiddleware.routeNotFound, errorMiddleware.processErrors])
   app.listen(port, () => logger.info(`Application started at port ${port}`))
 }

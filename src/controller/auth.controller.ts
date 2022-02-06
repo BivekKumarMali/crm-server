@@ -1,22 +1,23 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { autoInjectable } from 'tsyringe'
 import UserService from '../service/user.service'
-import { validateDTO } from '../utils/dto.util'
 import {
+  CreateUserDto,
   RefreshTokenDto,
   SendOTPDto,
   SigninDto,
-  SignupDto,
   VerifyOTPDto,
 } from '../dto/auth.dto'
 import HttpException from '../shared/http/httpException'
 import AuthMiddleware from '../middleware/auth.middleware'
+import { UtilService } from '../service/util.service'
 
 @autoInjectable()
 export default class AuthController {
   private router: Router
 
   constructor(
+    private readonly utilService: UtilService,
     private readonly userService: UserService,
     private readonly authMiddleware: AuthMiddleware
   ) {
@@ -29,9 +30,13 @@ export default class AuthController {
     this.signout = this.signout.bind(this)
   }
 
-  async signup(req: Request, res: Response, next: NextFunction) {
+  async signup(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(SignupDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(CreateUserDto, req.body)
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }
@@ -42,9 +47,16 @@ export default class AuthController {
     }
   }
 
-  async signin(req: Request, res: Response, next: NextFunction) {
+  async signin(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(SigninDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(
+        SigninDto,
+        req.body
+      )
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }
@@ -55,9 +67,16 @@ export default class AuthController {
     }
   }
 
-  async sendOTPToSignin(req: Request, res: Response, next: NextFunction) {
+  async sendOTPToSignin(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(SendOTPDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(
+        SendOTPDto,
+        req.body
+      )
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }
@@ -68,9 +87,16 @@ export default class AuthController {
     }
   }
 
-  async verifyOTPAndSignin(req: Request, res: Response, next: NextFunction) {
+  async verifyOTPAndSignin(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(VerifyOTPDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(
+        VerifyOTPDto,
+        req.body
+      )
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }
@@ -83,9 +109,16 @@ export default class AuthController {
     }
   }
 
-  async refreshToken(req: Request, res: Response, next: NextFunction) {
+  async refreshToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(RefreshTokenDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(
+        RefreshTokenDto,
+        req.body
+      )
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }
@@ -97,9 +130,16 @@ export default class AuthController {
     }
   }
 
-  async signout(req: Request, res: Response, next: NextFunction) {
+  async signout(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | unknown> {
     try {
-      const validatedDto = await validateDTO(RefreshTokenDto, req.body)
+      const validatedDto = await this.utilService.validateDTO(
+        RefreshTokenDto,
+        req.body
+      )
       if (validatedDto.errors) {
         throw new HttpException(validatedDto.errors, 400, 'Bad Request')
       }

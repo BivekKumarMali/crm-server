@@ -14,14 +14,13 @@ export default class Redis {
   private async connect(): Promise<void> {
     try {
       this.client = createClient({
-        url: `redis://${config.get('REDIS_HOST') as string}:${
-          config.get('REDIS_PORT') as number
-        }`,
+        url: `redis://${config.get('REDIS_HOST') as string}`,
       })
+
       this.client.on('connect', () =>
         this.logger.info('Redis Client Connected')
       )
-      // this.client.on('error', () => this.logger.error('Redis Client Error'))
+      
       await this.client.connect()
     } catch (error: any) {
       this.logger.error('Redis Client Error')

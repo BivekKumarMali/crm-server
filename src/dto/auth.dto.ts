@@ -2,15 +2,24 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
   ValidateIf,
 } from 'class-validator'
 
-export class SignupDto {
+export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   name: string
+
+  @IsString()
+  @ValidateIf((obj) => !obj.team)
+  company?: string
+
+  @IsString()
+  @ValidateIf((obj) => !obj.company)
+  teamId?: string
 
   @MinLength(4, {
     message: 'Invalid username length',
@@ -18,6 +27,12 @@ export class SignupDto {
   @IsString()
   @IsNotEmpty()
   username: string
+
+  @Matches(/^(\+?\d{1,3}|\d{1,4})$/, {
+    message: 'Invalid country code',
+  })
+  @IsNotEmpty()
+  countryCode: string
 
   @MinLength(10, {
     message: 'Invalid Phone Number',
@@ -48,11 +63,13 @@ export class SigninDto {
   @MinLength(4, {
     message: 'Invalid username length',
   })
-  @ValidateIf((cred) => !cred.email || cred.username)
+  @IsNotEmpty()
+  @ValidateIf((cred) => !cred.email)
   username?: string
 
   @IsEmail()
-  @ValidateIf((cred) => cred.email || !cred.username)
+  @IsNotEmpty()
+  @ValidateIf((cred) => !cred.username)
   email?: string
 
   @IsString()
@@ -67,6 +84,12 @@ export class SigninDto {
 }
 
 export class SendOTPDto {
+  @Matches(/^(\+?\d{1,3}|\d{1,4})$/, {
+    message: 'Invalid country code',
+  })
+  @IsNotEmpty()
+  countryCode: string
+
   @MinLength(10, {
     message: 'Invalid Phone Number',
   })
@@ -78,6 +101,12 @@ export class SendOTPDto {
 }
 
 export class VerifyOTPDto {
+  @Matches(/^(\+?\d{1,3}|\d{1,4})$/, {
+    message: 'Invalid country code',
+  })
+  @IsNotEmpty()
+  countryCode: string
+
   @MinLength(10, {
     message: 'Invalid Phone Number',
   })

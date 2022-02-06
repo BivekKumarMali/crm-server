@@ -1,21 +1,21 @@
+import { CreateTeamDto, UpdateTeamDto } from '../dto/team.dto'
 import HttpResponse from '../shared/http/httpResponse'
 import { injectable } from 'tsyringe'
+import { Team } from '../entities/team.entity'
 import HttpException from '../shared/http/httpException'
 import { plainToInstance } from 'class-transformer'
 import { User } from '../entities/user.entity'
 import { getConnection } from 'typeorm'
-import { List } from '../entities/list.entity'
-import { CreateListDto, UpdateListDto } from 'src/dto/list.dto'
 
 @injectable()
-export default class ListService {
-  async findOne(id: string): Promise<List | null> {
+export default class TeamService {
+  async findOne(id: string): Promise<Team | null> {
     try {
-      const list = await List.findOne({ id })
-      if (!list) {
+      const team = await Team.findOne({ id })
+      if (!team) {
         return null
       }
-      return list
+      return team
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -29,17 +29,17 @@ export default class ListService {
     }
   }
 
-  async findAll(user: User): Promise<List[]> {
+  async findAll(user: User): Promise<Team[]> {
     try {
-      const lists = await getConnection()
-        .getRepository(List)
-        .createQueryBuilder('list')
-        .leftJoinAndSelect('list.users', 'users')
-        .where('list.creatorId = :creatorId', { creatorId: user.id })
-        .orWhere('users.id IN(:userId)', { userId: user.id })
+      const teams = await getConnection()
+        .getRepository(Team)
+        .createQueryBuilder('team')
+        .leftJoinAndSelect('team.users', 'users')
+        .where('users.id IN(:userid)', { id: user.id })
+        .orWhere('team.creatorId = :creatorId', { creatorId: user.id })
         .getMany()
 
-      return lists
+      return teams
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -52,11 +52,11 @@ export default class ListService {
       throw new HttpException()
     }
   }
-  async create(list: CreateListDto): Promise<List> {
+  async create(team: CreateTeamDto): Promise<Team> {
     try {
-      const newList = List.create(list)
-      await newList.save()
-      return newList
+      const newTeam = Team.create(team)
+      await newTeam.save()
+      return newTeam
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -70,18 +70,23 @@ export default class ListService {
     }
   }
 
-  async update(id: string, updates: UpdateListDto): Promise<List | null> {
+  async update(id: string, updates: UpdateTeamDto): Promise<Team | null> {
     try {
-      const list = await List.findOne({ id })
-      if (!list) {
+      const team = await Team.findOne({ id })
+      if (!team) {
         return null
       }
 
       if (updates.name) {
-        list.name = updates.name
+        team.name = updates.name
       }
-      list.save()
-      return list
+
+      if (updates.description) {
+        team.description = updates.description
+      }
+
+      team.save()
+      return team
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -97,7 +102,7 @@ export default class ListService {
 
   async delete(id: string): Promise<boolean> {
     try {
-      const result = await List.delete({ id })
+      const result = await Team.delete({ id })
       return result.affected === 0
     } catch (err: any) {
       if (err instanceof HttpException) {
@@ -112,11 +117,11 @@ export default class ListService {
     }
   }
 
-  async findAllList(user: User): Promise<HttpResponse> {
+  async findAllTeam(user: User): Promise<HttpResponse> {
     try {
-      const lists = await this.findAll(user)
-      const serializedList = plainToInstance(List, lists)
-      return new HttpResponse({ lists: serializedList }, 200, 'success')
+      const teams = await this.findAll(user)
+      const serializedTeam = plainToInstance(Team, teams)
+      return new HttpResponse({ team: serializedTeam }, 200, 'success')
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -130,11 +135,13 @@ export default class ListService {
     }
   }
 
-  async createList(list: CreateListDto, user: User): Promise<HttpResponse> {
+  async createTeam(team: CreateTeamDto, user: User): Promise<HttpResponse> {
     try {
-      const newList = await this.create({ ...list, creatorId: user.id })
-      const serializedList = plainToInstance(List, newList)
-      return new HttpResponse({ list: serializedList }, 201, 'success')
+      const newTeam = await this.create({ ...team, creatorId: user.id })
+      newTeam.users = [user]
+      await newTeam.save()
+      const serializedTeam = plainToInstance(Team, newTeam)
+      return new HttpResponse({ team: serializedTeam }, 201, 'success')
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -148,14 +155,14 @@ export default class ListService {
     }
   }
 
-  async updateList(id: string, updates: UpdateListDto): Promise<HttpResponse> {
+  async updateTeam(id: string, updates: UpdateTeamDto): Promise<HttpResponse> {
     try {
-      const updateList = await this.update(id, updates)
-      if (!updateList) {
+      const updateTeam = await this.update(id, updates)
+      if (!updateTeam) {
         throw new HttpException(null, 404, 'Not Found')
       }
-      const serializedList = plainToInstance(List, updateList)
-      return new HttpResponse({ list: serializedList }, 200, 'success')
+      const serializedTeam = plainToInstance(Team, updateTeam)
+      return new HttpResponse({ team: serializedTeam }, 200, 'success')
     } catch (err: any) {
       if (err instanceof HttpException) {
         throw err
@@ -169,13 +176,23 @@ export default class ListService {
     }
   }
 
-  async deleteList(id: string): Promise<HttpResponse> {
+  async deleteTeam(id: string): Promise<HttpResponse> {
     try {
-      //TODO delete list
-      const isDeleted = await this.delete(id)
-      if (!isDeleted) {
+      const team = await getConnection()
+        .getRepository(Team)
+        .createQueryBuilder('team')
+        .leftJoinAndSelect('team.users', 'users')
+        .getOne()
+
+      if (!team) {
         throw new HttpException(null, 404, 'Not Found')
       }
+
+      if (team.users && team.users.length > 0) {
+        throw new HttpException(null, 400, 'Bad Request')
+      }
+
+      await this.delete(id)
       return new HttpResponse(null, 200, 'success')
     } catch (err: any) {
       if (err instanceof HttpException) {
